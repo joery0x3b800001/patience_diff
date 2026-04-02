@@ -6,7 +6,7 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 
 setup(
     name='bram-patience-diff',
-    version='1.0.1',
+    version='1.0.0',
     author='Shaun Joe',
     author_email='shaunjoeroy1234@gmail.com',
     description='Patience Diff Algorithm - An implementation of Bram Cohen\'s diff algorithm',
