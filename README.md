@@ -1,4 +1,4 @@
-# Patience Diff - Python Port
+# Patience Diff
 
 A complete Python port of Bram Cohen's algorithm for computing efficient differences.
 
