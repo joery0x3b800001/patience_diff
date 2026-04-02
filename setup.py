@@ -5,7 +5,7 @@ here = pathlib.Path(__file__).parent.resolve()
 long_description = (here / "README.md").read_text(encoding="utf-8")
 
 setup(
-    name='bram-patience-diff',
+    name='bram_patience_diff',
     version='1.0.0',
     author='Shaun Joe',
     author_email='shaunjoeroy1234@gmail.com',
