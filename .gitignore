@@ -12,3 +12,5 @@ dist/
 env/
 venv/
 PUBLISHING_WORKFLOW.md
+.vscode/
+.idea/
