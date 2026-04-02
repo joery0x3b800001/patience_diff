@@ -46,7 +46,6 @@ class Hunk:
         next_start = hunk.next_start
         
         def finalize_hunk():
-            nonlocal prev_start, next_start
             if curr_ranges:
                 h = Hunk(prev_start, prev_start, next_start, next_start, list(reversed(curr_ranges)))
                 hunks_list.append(h)
