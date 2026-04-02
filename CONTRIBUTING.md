@@ -1,5 +1,5 @@
 This repository contains open source software that is developed and
-maintained by [Jane Street][js].
+maintained by [Shaun Joe][author].
 
 Contributions to this project are welcome and should be submitted via
 GitHub pull requests.
@@ -64,4 +64,4 @@ If you set your `user.name` and `user.email` git configs, you can sign
 your commit automatically with git commit -s.
 
 [dco]: http://developercertificate.org/
-[js]: https://opensource.janestreet.com/
+[author]: https://github.com/joery0x3b800001
