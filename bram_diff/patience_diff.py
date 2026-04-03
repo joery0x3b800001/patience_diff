@@ -749,20 +749,22 @@ def unified_diff(
     b: _Sequence[str],
     fromfile: str = "",
     tofile: str = "",
+    fromfiledate: _Union[str, float] = "",
+    tofiledate: _Union[str, float] = "",
     n: int = 3,
     lineterm: str = "\n",
     sequencematcher: _Optional[_Type[PatienceSequenceMatcher]] = None,
 ) -> _Iterator[str]:
-
     matcher_class = sequencematcher or PatienceSequenceMatcher
     matcher = matcher_class(a=a, b=b)
 
     started = False
     for group in matcher.get_grouped_opcodes(n):
         if not started:
-            # Generate Headers
-            yield f"--- {fromfile}{lineterm}"
-            yield f"+++ {tofile}{lineterm}"
+            fromdate = f"\t{fromfiledate}" if fromfiledate else ""
+            todate = f"\t{tofiledate}" if tofiledate else ""
+            yield f"--- {fromfile}{fromdate}{lineterm}"
+            yield f"+++ {tofile}{todate}{lineterm}"
             started = True
 
         i1, i2, j1, j2 = group[0][1], group[-1][2], group[0][3], group[-1][4]
