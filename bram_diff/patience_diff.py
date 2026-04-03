@@ -781,3 +781,39 @@ def unified_diff(
             if tag in ("replace", "insert"):
                 for line in b[j1:j2]:
                     yield "+" + line
+
+def unified_diff_files(
+    a: str,
+    b: str,
+    sequencematcher: Optional[_Type[PatienceSequenceMatcher]] = None,
+) -> List[str]:
+    """Generate the diff for two files."""
+    # Should this actually be an error?
+    if a == b:
+        return []
+    if a == "-":
+        lines_a = _sys.stdin.readlines()
+        time_a = _time.time()
+    else:
+        with open(a) as f:
+            lines_a = f.readlines()
+        time_a = _os.stat(a).st_mtime  # noqa: F841
+
+    if b == "-":
+        lines_b = _sys.stdin.readlines()
+        time_b = _time.time()
+    else:
+        with open(b) as f:
+            lines_b = f.readlines()
+        time_b = _os.stat(b).st_mtime  # noqa: F841
+
+    # TODO: Include fromfiledate and tofiledate
+    return list(
+        unified_diff(
+            lines_a,
+            lines_b,
+            fromfile=a,
+            tofile=b,
+            sequencematcher=sequencematcher,
+        )
+    )
