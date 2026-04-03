@@ -9,6 +9,20 @@ Licensed under GNU General Public License v2 or later.
 
 from typing import List, Callable, Optional, Tuple, Any, TypeVar, Dict, Set
 from collections import deque
+
+import time as _time
+import os as _os
+import sys as _sys
+
+from typing import (
+    Iterator as _Iterator,
+    Optional as _Optional,
+    Sequence as _Sequence,
+    Type as _Type,
+    Union as _Union,
+    Tuple as _Tuple,
+    List as _List
+)
 import heapq
 
 try:
@@ -46,6 +60,68 @@ class OrderedSequence:
     
     def is_empty(self):
         return len(self.items) == 0
+
+
+class PatienceSequenceMatcher:
+    def __init__(self, isjunk=None, a: _Sequence[str] = "", b: _Sequence[str] = ""):
+        self.a = a
+        self.b = b
+        self._matching_blocks = None
+
+    def get_matching_blocks(self) -> _List[MatchingBlock]:
+        if self._matching_blocks is None:
+            # This calls the internal get_matching_blocks logic
+            self._matching_blocks = get_matching_blocks(None, self.a, self.b)
+        return self._matching_blocks
+
+    def get_opcodes(self) -> _Iterator[_Tuple[str, int, int, int, int]]:
+        i = j = 0
+        for block in self.get_matching_blocks():
+            ai, bj, n = block.prev_start, block.next_start, block.length
+            if i < ai and j < bj:
+                yield ('replace', i, ai, j, bj)
+            elif i < ai:
+                yield ('delete', i, ai, j, bj)
+            elif j < bj:
+                yield ('insert', i, ai, j, bj)
+
+            if n > 0:
+                yield ('equal', ai, ai + n, bj, bj + n)
+            i, j = ai + n, bj + n
+
+        # Emit any tail not covered by the sentinel
+        if i < len(self.a) and j < len(self.b):
+            yield ('replace', i, len(self.a), j, len(self.b))
+        elif i < len(self.a):
+            yield ('delete', i, len(self.a), j, j)
+        elif j < len(self.b):
+            yield ('insert', i, i, j, len(self.b))
+
+    def get_grouped_opcodes(self, n: int = 3) -> _Iterator[_List[_Tuple[str, int, int, int, int]]]:
+        codes = list(self.get_opcodes())
+        if not codes:
+            return
+
+        # If there are NO differences (only one 'equal' block), don't yield anything
+        if len(codes) == 1 and codes[0][0] == 'equal':
+            # Check if the sequences are actually different lengths or content
+            if self.a == self.b:
+                return
+            # If they are different but the matcher failed, force a replace
+            codes = [('replace', 0, len(self.a), 0, len(self.b))]
+
+        group = []
+        for tag, i1, i2, j1, j2 in codes:
+            if tag == 'equal':
+                if i2 - i1 > n * 2:
+                    group.append((tag, i1, i1 + n, j1, j1 + n))
+                    yield group
+                    group = []
+                    i1, j1 = i2 - n, j2 - n
+            group.append((tag, i1, i2, j1, j2))
+
+        if group:
+            yield group
 
 
 class Backpointers:
@@ -666,3 +742,40 @@ def get_hunks(prev_array, next_array, transform=None, context=-1, big_enough=1, 
 def default_context():
     """Return the default context value (infinite)."""
     return -1
+
+
+def unified_diff(
+    a: _Sequence[str],
+    b: _Sequence[str],
+    fromfile: str = "",
+    tofile: str = "",
+    n: int = 3,
+    lineterm: str = "\n",
+    sequencematcher: _Optional[_Type[PatienceSequenceMatcher]] = None,
+) -> _Iterator[str]:
+
+    matcher_class = sequencematcher or PatienceSequenceMatcher
+    matcher = matcher_class(a=a, b=b)
+
+    started = False
+    for group in matcher.get_grouped_opcodes(n):
+        if not started:
+            # Generate Headers
+            yield f"--- {fromfile}{lineterm}"
+            yield f"+++ {tofile}{lineterm}"
+            started = True
+
+        i1, i2, j1, j2 = group[0][1], group[-1][2], group[0][3], group[-1][4]
+        yield f"@@ -{i1 + 1},{i2 - i1} +{j1 + 1},{j2 - j1} @@{lineterm}"
+
+        for tag, i1, i2, j1, j2 in group:
+            if tag == "equal":
+                for line in a[i1:i2]:
+                    yield " " + line
+                continue
+            if tag in ("replace", "delete"):
+                for line in a[i1:i2]:
+                    yield "-" + line
+            if tag in ("replace", "insert"):
+                for line in b[j1:j2]:
+                    yield "+" + line

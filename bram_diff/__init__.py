@@ -8,7 +8,7 @@ Copyright (C) 2005 Bram Cohen, Copyright (C) 2005, 2006 Canonical Ltd
 Licensed under GNU General Public License v2 or later.
 """
 
-__version__ = "1.0.0"
+__version__ = "1.0.2"
 
 # Import all public modules for convenience
 from . import (
